@@ -1,109 +1,70 @@
 require("dotenv").config();
-//spotify api//
-var spotify = new spotify(keys.spotify);
-//Spotify Key//
-var keys = require("./keys");
-var request = require("request");
-var fs = require("fs");
-var spotify = new spotify(keys.spotify);
+ //keys//
+ var keys = require ("./keys.js");
+ var spotify = require('node-spotify-api');
+ var axios = require ("axios");
+ var moment = require("moment");
 
-// Calling the spotify api//
-var callSPotifyAPI = function (songName) {
-    if (songName === undefined) {
-        songName = "1999";
+var fs = require("fs");
+var query = process.argv[3];
+
+var option = process.argv[2];
+
+//spotify///
+var spotify = new spotify(keys.spotify);
+switch (option) {
+    case "movie-this":
+        movieThis(query);
+        break;
+        case "concert-this":
+            concertThis(query);
+            break;
+            default:
+
+            fs.readFile("random.txt", "utf8", function(error, data) {
+                var data = api.split(",");
+                var thatWay = data[1];
+                if(error) {
+                    return console.log(error);
+                }
+                spotifyCall(thatWay);
+            })
+}
+function spotifyCall(songName) {
+    spofity.search({type: 'track', query: 'songName'}, function(err, datat) {
+        if (err) {
+            return console.log('Error occured: ' , + err);
+
+        } console.log("\n_Track_Info_" + "\nArtist: " + data.tracks.items[0].artists[0].name+ "\nSong: " + data.track.items[0].name + "\nLink: " + data.tracks.items[0].external_urls.spotifyCall+ "\nAlbuk: " + data.tracks.items[0].album.name+ "\nGreat song! Search another ");
+    });
+}
+
+//OMDB//
+function movieThis(movieName) {
+    if (!movieName) {
+        movieName = "Deadpool";
     }
-    spotify.search(
-        {
-            type: "track",
-            query: songName,
-            limit: 10,
-        },
-        function (err, data) {
-            if (err) {
-                console.log("Error occured: " + err);
-                return;
-            }
-            var songs = data.tracks.items;
-            for (var i = 0; i < songs.length; i++); {
-                console.log(i);
-                console.log("Artist Name: " + songs[i].artist[0].name);
-                console.log("Song title: " + songs[i].name);
-                console.log("Track number: " + songs[i].track_number);
-                console.log("Album: " + songs[i].album.name);
-                console.log("Release date: " + songs[i].album.release_date);
-                console.log("Album type: " + songs[i].album.album_type);
-                console.log("Previous Song: " + songs[i].preview_url);
-                console.log("-------");
+    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=plot-short&apiKey=trilogy";
+
+    axios.get(queryUrl).then (
+        function(response) {
+            if(!movieName) {
+                movieName= "Deadpool";
+                console.log(("\n_movie_Info_" + "\nTitle: " + response.data.Title + "\nRelease Year: " + response.data.year + "\nRating: " + response.data.Rated + "\nRelease Country: " + response.data.Country + "\nLangauge: " + response.data.Langauage + "\nPlot: " + response.data.Plot + "\nActors: " + response.data.Actors + "\n" + "\n Great Choice!"); 
+                
             }
         }
     );
-};
-//Calling the OMDB search//
-var callOMDBAPI = function (movieName) {
-    if (movieName === undefined) {
-        movieName = "DeadPool";
-    }
-    var urlHit = "https://omdbapi.com/?t=" + movieName +
-        "&=&plot=full&tomatoes=true&apikey=trilogy";
-    Request(urlHit, function (err, response, body) {
-        if (!error && response.statuscode === 200) {
-            var jsonData = JSON.parse(body);
-            console.log("Title: " + jsonData.Title);
-            console.log("Year: " + jsonData.Year);
-            console.log("Rated: " + jsonData.Rated);
-            console.log("IMDB Rating: " + jsonData.imbdRating);
-            console.log("Coumtry: " + jsonData.Country);
-            console.log("Language: " + jsonData.Launguage);
-            console.log("Plot: " + jsonData.Plot);
-            console.log("Actors: " + jsonData.Actors);
-            console.log("Rotten Tomatoes Rating: " + jsonData.Ratings[1].value);
+}
+
+//Band in town.//
+function conncertThis (artist) {
+    var bandsQueryUrl = "https://rest.bandsintown.com/artist/" + artist + "/events?app_id=codingbootcamp";
+
+    axios.get(bandsQueryUrl).then(
+        function(response) {
+            console.log("_Upcoming Events_");
+            console.log("Artist: " + artist + "\nVenue: " + response.data[0].venue.name + "\nLocation: " + response.data[0].venue.country  + "\mDate: " + response.data[0].datatime + "\nYeah buddy!");
+         });
         }
-    });
-};
-//function to see which commadn was used.//
-
-//Spotify//
-var userCommand = function (caseData, functionData) {
-    switch (caseData) {
-        case "spotify-this-song":
-            callSPotifyAPI(functionData);
-            break;
-
-        //omdb//
-        case "movie-this":
-            callOMDBAPI(functionData);
-            break;
-
-        //LIRI does not understand//
-        case "do-what-it-says":
-            doWhatItSays();
-            break;
-        default:
-            console.log("I don't understand your request, try google next time");
-    }
-
-};
-//doWhatItSays function//
-
-var doWhatItSays = function () {
-    fs.readFile('random.txt', 'utf8', function (error, data) {
-        console.log(data);
-        var dataArr = data.split(',');
-        if (dataArr.length === 2) {
-            userCommand(dataArr[0], dataArr[1]);
-        } else if (dataArr.length == 1) {
-            userCommand(dataArr[0]);
-        }
-    });
-};
-
-//taking arguments and execute switch/
-
-var cmdLnArgs = function (argOne, argTwo) {
-    userCommand(argOne, argTwo);
-};
-
-//User imput to argument//
-
-cmdLnArgs(process.argv[2], process.argv[3]);
-
+    
